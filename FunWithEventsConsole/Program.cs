@@ -1,4 +1,9 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.FeatureManagement;
+using System.Diagnostics;
+
+
 
 
 // See https://aka.ms/new-console-template for more information
@@ -67,7 +72,7 @@ public class Queries
                 ts.Milliseconds / 10);
             return elapsedString;
         } 
-        private set {  } }
+        private set {  } } //use backing field. propertychanged methods to notify of subscribed methods that the value has changed.
     public string ElapsedTimer2
     {
         get
@@ -106,6 +111,24 @@ public class Queries
         Thread.Sleep(10000);
         stopwatch2.Stop();
         stopwatch2.Reset();
+    }
+    public async Task testme1()
+    {
+        var featureManagement = new Dictionary<string, string> { { "FeatureManagement:Beta", "true" } };
+
+        IConfigurationRoot configuration = new ConfigurationBuilder().AddInMemoryCollection(featureManagement).Build();
+
+        IServiceCollection services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        services.AddFeatureManagement(configuration);
+
+        IServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        IFeatureManager featureManager = serviceProvider.GetRequiredService<IFeatureManager>();
+
+        if (await featureManager.IsEnabledAsync("Beta"))
+        {
+            Console.WriteLine("Welcome to the beta!");
+        }
     }
 }
 
